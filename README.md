@@ -102,8 +102,8 @@ rosrun rqt_graph rqt_graph
 ## Media
 
 <p align="center"> 
-  <img src="media/hydrone_watertoair.gif" alt="Hydrone Gif" width="450"/>
-  <img src="media/hydrone_airtowater.gif" alt="Hydrone Gif" width="450"/>
+  <img src="media/hydrone_watertoair.gif" alt="Hydrone Gif" width="420"/>
+  <img src="media/hydrone_airtowater.gif" alt="Hydrone Gif" width="420"/>
 </p>  
 
 <p align="justify"> 

@@ -99,17 +99,14 @@ roslaunch hydrone_deep_rl_icra hydrone.launch
 rosrun rqt_graph rqt_graph
 ```
 
-<p align="justify"> 
-  <a>However, we also make the diagram available in a more abstract way right below.</a>
-</p>
+## Media
 
 <p align="center"> 
   <img src="media/hydrone.gif" alt="Hydrone Gif"/>
 </p>  
 
-## Media
 <p align="justify"> 
-  <a>We have the official simulation video posted on youtube, to access it just click on the following hyperlink:</a><a href="https://www.youtube.com/">Hydrone Video</a>
+  <a>We have the official simulation video posted on youtube, to access it just click on the following hyperlink:</a><a href="https://www.youtube.com/"> Hydrone Video</a>
 </p>
 
 <p align="center"> 

@@ -109,7 +109,7 @@ rosrun rqt_graph rqt_graph
 
 ## Media
 <p align="justify"> 
-  <a>We have the official simulation video posted on youtube, to access it just click on the following hyperlink: [Hydrone Video](https://www.youtube.com/).</a>
+  <a>We have the official simulation video posted on youtube, to access it just click on the following hyperlink:</a><a href="https://www.youtube.com/">Hydrone Video</a>
 </p>
 
 <p align="center"> 

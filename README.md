@@ -1,5 +1,3 @@
-# hydrone_deep_rl_icra
-
 <h1 align="center">Hybrid Unmanned Aerial Underwater Vehicle</h1>
 <h3 align="center">Deep Reinforcement Learning applied to hybrid vehicles using gazebo with RotorS and UUV sim as a simulated training environment.</h3>
 

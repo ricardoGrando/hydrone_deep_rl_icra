@@ -1,0 +1,75 @@
+<!-- Spawns the RexROV 2 vehicle in the simulation -->
+<launch>
+  <arg name="debug" default="0" doc="Starts the Gazebo plugins in debug mode for more verbose output"/>
+
+  <arg name="x" default="-12" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y" default="2" doc="Y coordinate of the vehicle's initial position (in ENU)"/>    
+  <arg name="z" default="3" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="roll" default="0.0" doc="Roll angle of the vehicle's initial orientation"/>
+  <arg name="pitch" default="0.0" doc="Pitch angle of the vehicle's initial orientation"/>
+  <arg name="yaw" default="0.0" doc="Yaw angle of the vehicle's initial orientation"/>
+
+  <arg name="mode" default="default" doc="Vehicle's build configuration mode"/>
+  <arg name="namespace" default="hydrone_aerial_underwater" doc="Namespace to spawn the vehicle"/>
+  <arg name="use_simplified_mesh" default="false" doc="Use simplified geometries instead of the mesh"/>
+  
+  <arg name="world_name" default="aerial_underwater"/>
+  <arg name="gui" default="true"/>
+  <arg name="paused" default="false"/>
+
+  <arg name="mav_name" default="hydrone"/>
+  <arg name="model" default="$(find hydrone_aerial_underwater_description)/urdf/$(arg mav_name)_base.xacro"/>
+  <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="$(arg mav_name)"/>
+  <arg name="wait_to_record_bag" default="false"/>
+  <arg name="enable_mavlink_interface" default="false"/>
+  
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name"  value="$(find hydrone_aerial_underwater_gazebo)/worlds/$(arg world_name).world"/>
+      <arg name="paused" value="$(arg paused)"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="headless" value="false"/>
+      <arg name="debug" value="false"/>
+      <arg name="verbose" value="true"/>
+  </include>
+
+  <group ns="$(arg namespace)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_$(arg mode).xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+  
+    <node name="lee_position_controller_node" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+      <!-- <remap from="/hydrone_aerial_underwater/command/pose" to="/hydrone_aerial_underwater/command_aerial/pose" /> -->
+    </node>
+
+    <!-- <node name="hydrone_aerial_underwater_mission_planner" pkg="hydrone_aerial_underwater_mission_planner" type="hydrone_aerial_underwater_mission_planner.py" />     -->
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+  <include file="$(find uuv_assistants)/launch/message_to_tf.launch">
+    <arg name="namespace" value="$(arg namespace)"/>
+    <arg name="world_frame" value="world"/>
+    <arg name="child_frame_id" value="/$(arg namespace)/base_link"/>
+  </include>
+
+  <!-- RViz -->
+  <!-- <arg name="rviz" default="true"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find velodyne_description)/rviz/example.rviz" /> -->
+
+</launch>

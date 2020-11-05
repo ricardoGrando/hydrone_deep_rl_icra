@@ -1,0 +1,20 @@
+<launch>
+  <arg name="root_dir" default="/home/ricardo/"/>  
+  <arg name="file_dir" default="sac_stage_1/sac_env1_2d_3_layers"/>
+  <arg name="testing" default="false"/> 
+  <arg name="world" default="stage_1"/> 
+  <arg name="graphic_int" default="true"/> 
+
+  <include file="$(find hydrone_aerial_underwater_deep_rl)/launch/hydrone_deep_rl.launch" >
+    <arg name="world_name" value="$(arg world)" />
+    <arg name="gui" value="$(arg graphic_int)" />
+  </include>
+
+  <node pkg="hydrone_aerial_underwater_deep_rl" type="test_pid.py" name="test_lee" output="screen" />
+
+  <node pkg="hydrone_aerial_underwater_deep_rl" type="store_disk.py" name="store_disk" output="screen">
+    <param name="file_path"  value="$(arg file_dir)"/>
+    <param name="root_path"  value="$(arg root_dir)"/>
+    <param name="test_param"  value="$(arg testing)"/>
+  </node>
+</launch>

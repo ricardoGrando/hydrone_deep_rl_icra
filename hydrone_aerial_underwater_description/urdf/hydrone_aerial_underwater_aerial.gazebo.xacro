@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!--
+    Center of buoyancy according to eq. (3.1) p. 28 in Berg2012.
+    The original values, [0.0822, -0.00773, 0.3872] however, seem to
+    assume NWU (otherwise cob is below cog?).
+    -->
+    <xacro:property name="cob" value="0.0 0.0 0.0"/>
+
+    <!-- Volume, see p.31 in Berg2012 -->
+    <!-- <xacro:property name="volume" value="1.83826"/> -->
+    <!-- <xacro:property name="volume" value="0.00001"/> -->
+    <!-- <xacro:property name="volume" value="0.001"/> -->
+    <xacro:property name="volume" value="0.0001"/>
+    <!-- <xacro:property name="volume" value="0.00005"/> -->
+
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+
+    <xacro:macro name="hydrone_aerial_underwater_hydro_model" params="namespace">
+        <link name="${namespace}/base_link">
+            <neutrally_buoyant>0</neutrally_buoyant>
+            <volume>${volume}</volume>
+
+            <box>
+                <width>0.47</width>
+                <length>0.47</length>
+                <height>0.1</height>
+            </box>
+                       
+            <center_of_buoyancy>${cob}</center_of_buoyancy>
+            <hydrodynamic_model>
+                <type>fossen</type>
+
+                <added_mass>
+                    1.93       0.0         0.0         0.0         0.0         0.0
+                    0.0         1.93       0.0         0.0         0.0         0.0
+                    0.0         0.0         1.93       0.0         0.0         0.0
+                    0.0         0.0         0.0         0.0156   0.0014   0.0004
+                    0.0         0.0         0.0         0.0014    0.03      0.0011
+                    0.0         0.0         0.0         0.0004    0.0011  0.0166
+                </added_mass>
+                
+           
+                <linear_damping>
+                    0.0125   0.0         0.0         0.0         0.0         0.0
+                    0.0         0.0125   0.0         0.0         0.0         0.0
+                    0.0         0.0         0.0499   0.0         0.0         0.0
+                    0.0         0.0         0.0         0.0125   0.0         0.0
+                    0.0         0.0         0.0         0.0         0.0125   0.0
+                    0.0         0.0         0.0         0.0         0.0         0.0499
+                </linear_damping>
+                
+    
+                <quadratic_damping>
+                    0.0125   0.0         0.0         0.0         0.0         0.0
+                    0.0         0.0125   0.0         0.0         0.0         0.0
+                    0.0         0.0         0.0499   0.0         0.0         0.0
+                    0.0         0.0         0.0         0.0125   0.0         0.0
+                    0.0         0.0         0.0         0.0         0.0125   0.0
+                    0.0         0.0         0.0         0.0         0.0         0.0499
+                </quadratic_damping> 
+
+                <!-- Added mass: see p.28 in Berg2012 -->
+                <!-- <added_mass>
+                     779.79 -6.8773 -103.32  8.5426 -165.54 -7.8033
+                    -6.8773    1222   51.29  409.44 -5.8488  62.726
+                    -103.32   51.29  3659.9  6.1112 -386.42  10.774
+                     8.5426  409.44  6.1112   534.9 -10.027  21.019
+                    -165.54 -5.8488 -386.42 -10.027  842.69 -1.1162
+                    -7.8033  62.726  10.775  21.019 -1.1162  224.32
+                </added_mass> -->
+
+                <!-- <added_mass>
+                     77.979 -0.68773 -10.332  0.85426 -16.554 -0.78033
+                    -0.68773    122.2   5.129  40.944 -0.58488  6.2726
+                    -10.332   5.129  365.99  0.61112 -38.642  1.0774
+                     0.85426  4.0944  0.061112   5.349 -0.10027  0.21019
+                    -1.6554 -0.58488 -38.642 -1.0027  84.269 -0.11162
+                    -0.78033  6.2726  1.0775  2.1019 -0.11162  22.432
+                </added_mass> -->
+                <!-- <added_mass>
+                     0.77979 -0.0068773 -0.10332  0.00085426 -0.16554 -0.00078033
+                    -0.0068773    1.222   0.05129  0.40944 -0.0058488  0.062726
+                    -0.10332   0.05129  3.6599  0.0061112 -0.38642  0.010774
+                     0.0085426  0.40944  0.0061112   0.5349 -0.010027  0.021019
+                    -0.16554 -0.0058488 -0.38642 -0.010027  0.84269 -0.0011162
+                    -0.078033  0.062726  0.010775  0.021019 -0.0011162  0.22432
+                </added_mass> -->
+                
+                <!-- Linear damping: see p.31 in Berg2012 -->
+                <!-- <linear_damping>
+                    -74.82 -69.48 -728.4 -268.8 -309.77 -105
+                </linear_damping> -->
+                <!-- <linear_damping>
+                    -0.07482 -0.06948 -0.7284 -0.2688 -0.30977 -0.105
+                </linear_damping> -->
+                
+                <!-- Non-linear damping: see p.30 in Berg2012 -->
+                <!-- <quadratic_damping>
+                    -748.22 -992.53 -1821.01 -672 -774.44 -523.27
+                </quadratic_damping> -->
+                <!-- <quadratic_damping>
+                    -0.74822 -0.99253 -1.82101 -0.672 -0.77444 -0.52327
+                </quadratic_damping> -->
+
+            </hydrodynamic_model>
+        </link>
+    </xacro:macro>
+
+    <!-- <vertical>
+                    <samples>5</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-${15.0*M_PI/180.0}</min_angle>
+                    <max_angle>${15.0*M_PI/180.0}</max_angle>
+                </vertical> -->
+
+    <gazebo reference="base_scan">
+        <material>Gazebo/FlatBlack</material>
+        <sensor type="ray" name="VLP-16-VLP16-Simplified">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>false</visualize>
+        <update_rate>5</update_rate>
+        <ray>
+            <scan>
+                <horizontal>
+                    <samples>20</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-${3*M_PI/4}</min_angle>
+                    <max_angle>${3*M_PI/4}</max_angle>
+                    <min_angle>0</min_angle>
+                    <max_angle>${2*M_PI - M_PI/4}</max_angle>
+                </horizontal>                
+            </scan>
+            <range>
+            <min>0.5</min>
+            <max>10.0</max>
+            <resolution>0.015</resolution>
+            </range>
+            <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.0</stddev>
+            </noise>
+        </ray>
+        <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+            <topicName>scan</topicName>
+            <frameName>base_scan</frameName>
+        </plugin>
+        </sensor>
+    </gazebo>            
+
+</robot>
+

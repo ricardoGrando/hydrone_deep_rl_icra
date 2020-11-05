@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<robot name="hydrone_aerial_underwater" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <xacro:arg name="debug" default="0"/>
+  <xacro:arg name="namespace" default="hydrone_aerial_underwater"/>
+  <xacro:arg name="use_simplified_mesh" default="false"/>
+  <xacro:arg name="inertial_reference_frame" default="world"/>
+  <!-- Include the ROV macro file -->
+  <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/hydrone_aerial_underwater_base_aerial.xacro"/>
+  <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/hydrone_aerial_underwater_aerial.gazebo.xacro"/>
+
+  <!-- Create the hydrone_aerial_underwater -->
+  <xacro:hydrone_aerial_underwater_base
+    namespace="$(arg namespace)"
+    use_simplified_mesh="$(arg use_simplified_mesh)"
+    inertial_reference_frame="$(arg inertial_reference_frame)">
+    <!--
+      The underwater object plugin is given as an input block parameter to
+      allow the addition of external models of manipulator units
+    -->
+    <gazebo>
+      <plugin name="uuv_plugin" filename="libuuv_underwater_object_ros_plugin.so">
+        <fluid_density>1028.0</fluid_density>
+        <flow_velocity_topic>hydrodynamics/current_velocity</flow_velocity_topic>
+        <debug>$(arg debug)</debug>
+        <!-- Adding the hydrodynamic and hydrostatic parameters for the vehicle-->
+        <xacro:hydrone_aerial_underwater_hydro_model namespace="$(arg namespace)"/>
+      </plugin>
+    </gazebo>
+  </xacro:hydrone_aerial_underwater_base>
+
+  <!-- Joint state publisher plugin -->
+  <xacro:default_joint_state_publisher namespace="$(arg namespace)" update_rate="50"/>
+
+</robot>

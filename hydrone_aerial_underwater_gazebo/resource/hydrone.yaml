@@ -1,0 +1,16 @@
+# Iris vehicle parameters
+# mass: 1862.87
+mass: 2.07675
+# inertia: {xx: 525.39, xy: 1.44, xz: 33.41, yy: 794.20, yz: 2.6, zz: 691.23}
+# inertia: {xx: 0.52539, xy: 0.00144, xz: 0.03341, yy: 0.79420, yz: 0.0026, zz: 0.69123}
+inertia: {xx: 0.0347563, xy: 0.0, xz: 0.0, yy: 0.0458929, yz: 0.0, zz: 0.0977}
+#inertia: {xx: 0.01152, xy: 0.0, xz: 0.0, yy: 0.01152, yz: 0.0, zz: 0.0218}
+
+# angle should be expressed in rad
+# direction 1 means counter clockwise, -1 clockwise
+# The order of the rotors matters for the calculation of the allocation matrix.
+rotor_configuration:
+  '0': {angle: -0.78539, arm_length: 0.278953625178093, rotor_force_constant: 8.54858e-06, rotor_moment_constant: 1.6e-2, direction: 1.0}
+  '1': {angle: 2.35619, arm_length: 0.278953625178093, rotor_force_constant: 8.54858e-06, rotor_moment_constant: 1.6e-2, direction: 1.0}
+  '2': {angle: 0.78539, arm_length: 0.278953625178093, rotor_force_constant: 8.54858e-06, rotor_moment_constant: 1.6e-2, direction: -1.0}
+  '3': {angle: -2.35619, arm_length: 0.278953625178093, rotor_force_constant: 8.54858e-06, rotor_moment_constant: 1.6e-2, direction: -1.0}

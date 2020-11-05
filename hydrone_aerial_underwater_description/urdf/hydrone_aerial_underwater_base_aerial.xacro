@@ -1,0 +1,991 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro"/>
+  <xacro:include filename="$(find uuv_sensor_ros_plugins)/urdf/sensor_snippets.xacro"/>
+  <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
+  
+  <!-- Parameters -->
+  <xacro:property name="visual_mesh_file" value="file://$(find hydrone_aerial_underwater_description)/meshes/hydrone_base.dae"/>
+
+  <!-- Mass, see p.28 in Berg2012 -->
+  <xacro:property name="mass" value="1.93"/>
+  <!-- <xacro:property name="mass" value="1862.87"/> -->
+
+  <xacro:property name="namespace" value="$(arg namespace)" />
+  <xacro:property name="rotor_velocity_slowdown_sim" value="10" />
+  <xacro:property name="use_mesh_file" value="true" />
+  <xacro:property name="mesh_file" value="package://hydrone_aerial_underwater_description/meshes/hydrone_base.dae" />
+  <xacro:property name="rotor_1_mesh_file" value="package://hydrone_aerial_underwater_description/meshes/aerial_propeller_1.dae" />
+  <xacro:property name="rotor_2_mesh_file" value="package://hydrone_aerial_underwater_description/meshes/aerial_propeller_2.dae" />
+  <xacro:property name="body_width" value="0.47" /> <!-- [m] -->
+  <xacro:property name="body_height" value="0.09" /> <!-- [m] -->
+  <xacro:property name="arm_length_front_x" value="0.19725" /> <!-- [m] -->
+  <xacro:property name="arm_length_back_x" value="0.19725" /> <!-- [m] -->
+  <xacro:property name="arm_length_front_y" value="0.19725" /> <!-- [m] -->
+  <xacro:property name="arm_length_back_y" value="0.19725" /> <!-- [m] -->
+  <xacro:property name="rotor_offset_top" value="0.035" /> <!-- [m] -->
+  <xacro:property name="radius_rotor" value="0.195" /> <!-- [m] -->
+  <xacro:property name="sin30" value="0.5" />
+  <xacro:property name="cos30" value="0.866025403784" />
+  <xacro:property name="sqrt2" value="1.4142135623730951" />
+
+  <xacro:property name="mass_rotor" value="0.005" /> <!-- [kg] -->
+  <xacro:property name="rotor_drag_coefficient" value="8.06428e-05" />
+  <xacro:property name="rolling_moment_coefficient" value="0.000001" />
+  <xacro:property name="motor_constant" value="8.54858e-06" /> <!-- [kg.m/s^2] -->
+  <xacro:property name="moment_constant" value="0.016" /> <!-- [m] -->
+  <xacro:property name="time_constant_up" value="0.0125" /> <!-- [s] -->
+  <xacro:property name="time_constant_down" value="0.025" /> <!-- [s] -->
+  <xacro:property name="max_rot_velocity" value="1838" /> <!-- [rad/s] -->
+
+  <xacro:property name="mesh_pos_x" value="-0.2175" /> <!-- [m] -->
+  <xacro:property name="mesh_pos_y" value="0.2175" /> <!-- [m] -->
+  <xacro:property name="mesh_pos_z" value="-0.05" /> <!-- [m] -->
+  <xacro:property name="mesh_ori_x" value="1.5707" /> <!-- [m] -->
+  <xacro:property name="mesh_ori_y" value="0.0" /> <!-- [m] -->
+  <xacro:property name="mesh_ori_z" value="0.0" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_pos_x" value="0.1905" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_pos_y" value="-0.0205" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_pos_z" value="0.01" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_ori_x" value="-1.5707" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_ori_y" value="0.0" /> <!-- [m] -->
+  <xacro:property name="mesh_aerprop_ori_z" value="1.5707" /> <!-- [m] -->
+
+  <!-- inertia of a single rotor, assuming it is a cuboid. Height=3mm, width=15mm -->
+  <xacro:property name="rotor_inertia">
+    <xacro:box_inertia x="${radius_rotor}" y="0.015" z="0.003" mass="${mass_rotor*rotor_velocity_slowdown_sim}" />
+  </xacro:property>
+
+  <xacro:arg name="gpu" default="false"/>
+  <xacro:property name="gpu" value="$(arg gpu)" />
+
+  <!-- Included URDF Files -->
+  <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/multirotor_base.xacro" />
+
+  <xacro:macro name="hydrone_aerial_underwater_base"
+    params="namespace *gazebo use_simplified_mesh inertial_reference_frame">
+    
+    <!-- Property Blocks -->
+    <xacro:property name="body_inertia">
+      <!-- Iris values -->
+      <inertia ixx="0.0347563" ixy="0.0" ixz="0.0" iyy="0.0458929" iyz="0.0" izz="0.0977" />
+      <!-- RexRov Values -->
+      <!-- <inertia ixx="525.39" ixy="1.44" ixz="33.41" iyy="794.20" iyz="2.6" izz="691.23"/> -->
+      <!-- <inertia ixx="0.52539" ixy="0.00144" ixz="0.03341" iyy="0.79420" iyz="0.0026" izz="0.69123"/> -->
+      <!-- <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" /> -->
+    </xacro:property>
+
+    <!-- Instantiate multirotor_base_macro once -->
+    <xacro:multirotor_base_macro
+      robot_namespace="${namespace}"
+      mass="${mass}"
+      color="White"
+      body_width="${body_width}"
+      body_height="${body_height}"
+      use_mesh_file="${use_mesh_file}"
+      mesh_file="${mesh_file}"
+      mesh_pos_x="${mesh_pos_x}"
+      mesh_pos_y="${mesh_pos_y}"
+      mesh_pos_z="${mesh_pos_z}"
+      mesh_ori_x="${mesh_ori_x}"
+      mesh_ori_y="${mesh_ori_y}"
+      mesh_ori_z="${mesh_ori_z}"
+      >
+      <xacro:insert_block name="body_inertia" />
+    </xacro:multirotor_base_macro>
+
+    <!-- <joint name="${namespace}/thruster_1_joint" type="continuous">
+      <origin xyz="0.19725 -0.19725 -0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_1"/>
+    </joint>
+
+    <link name="${namespace}/thruster_1">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.1">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_aerial_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+
+      <collision>
+       
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.06 0.04"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_0_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <linkName>${namespace}/thruster_1</linkName>
+        <jointName>${namespace}/thruster_1_joint</jointName>
+        <thrusterID>1</thrusterID>
+        <gain>1</gain>
+        <clampMax>-3000</clampMax>
+        <clampMin>3000</clampMin>
+        <thrustMin>-1000</thrustMin>
+        <thrustMax>1000</thrustMax>
+        <thrust_efficiency>1</thrust_efficiency>
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.00031</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_1">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+
+
+    <joint name="${namespace}/thruster_2_joint" type="continuous">
+      <origin xyz="0.19725 0.19725 -0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 -1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_2"/>
+    </joint>
+
+    <link name="${namespace}/thruster_2">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.1">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+
+        <origin xyz="-0.0 -0.0 -0.0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.06 0.04"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_aerial_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_2_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <linkName>${namespace}/thruster_2</linkName>
+        <jointName>${namespace}/thruster_2_joint</jointName>
+        <thrusterID>2</thrusterID>
+        <gain>1</gain>
+        <clampMax>-3000</clampMax>
+        <clampMin>3000</clampMin>
+        <thrustMin>-1000</thrustMin>
+        <thrustMax>1000</thrustMax>
+        <thrust_efficiency>1</thrust_efficiency>
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.00031</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_2">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+   
+
+
+
+    <joint name="${namespace}/thruster_3_joint" type="continuous">
+      <origin xyz="-0.19725 0.19725 -0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_3"/>
+    </joint>
+
+    <link name="${namespace}/thruster_3">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.1">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+
+        <origin xyz="-0.0 -0.0 -0.0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.06 0.04"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_aerial_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_3_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <linkName>${namespace}/thruster_3</linkName>
+        <jointName>${namespace}/thruster_3_joint</jointName>
+        <thrusterID>3</thrusterID>
+        <gain>1</gain>
+        <clampMax>-3000</clampMax>
+        <clampMin>3000</clampMin>
+        <thrustMin>-1000</thrustMin>
+        <thrustMax>1000</thrustMax>
+        <thrust_efficiency>1</thrust_efficiency>
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.00031</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_3">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+
+    <joint name="${namespace}/thruster_4_joint" type="continuous">
+      <origin xyz="-0.19725 -0.19725 -0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 -1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_4"/>
+    </joint>
+
+    <link name="${namespace}/thruster_4">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.1">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+        <origin xyz="-0.0 -0.0 -0.0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.06 0.04"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_aerial_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_4_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <linkName>${namespace}/thruster_4</linkName>
+        <jointName>${namespace}/thruster_4_joint</jointName>
+        <thrusterID>4</thrusterID>
+        <gain>1</gain>
+        <clampMax>-3000</clampMax>
+        <clampMin>3000</clampMin>
+        <thrustMin>-1000</thrustMin>
+        <thrustMax>1000</thrustMax>
+        <thrust_efficiency>1</thrust_efficiency>
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.00031</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_4">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo> -->
+
+    <gazebo reference="${namespace}/base_link">      
+      <material>Gazebo/White</material>
+    </gazebo>
+
+
+
+
+
+
+    
+
+
+
+
+    <!-- Instantiate rotors -->
+    <xacro:vertical_rotor
+      robot_namespace="${namespace}"
+      suffix="front_right"
+      direction="ccw"
+      motor_constant="${motor_constant}"
+      moment_constant="${moment_constant}"
+      parent="${namespace}/base_link"
+      mass_rotor="${mass_rotor}"
+      radius_rotor="${radius_rotor}"
+      time_constant_up="${time_constant_up}"
+      time_constant_down="${time_constant_down}"
+      max_rot_velocity="${max_rot_velocity}"
+      motor_number="0"
+      rotor_drag_coefficient="${rotor_drag_coefficient}"
+      rolling_moment_coefficient="${rolling_moment_coefficient}"
+      color="Blue"
+      use_own_mesh="true"
+      mesh_pos_x="${mesh_aerprop_pos_x}"
+      mesh_pos_y="${mesh_aerprop_pos_y}"
+      mesh_pos_z="${mesh_aerprop_pos_z}"
+      mesh_ori_x="${mesh_aerprop_ori_x}"
+      mesh_ori_y="${mesh_aerprop_ori_y}"
+      mesh_ori_z="${mesh_aerprop_ori_z}"
+      mesh="${rotor_2_mesh_file}">
+      <origin xyz="${arm_length_front_x} -${arm_length_front_y} ${rotor_offset_top}" rpy="0 0 0" />
+      <xacro:insert_block name="rotor_inertia" />
+    </xacro:vertical_rotor>
+
+    <xacro:vertical_rotor
+      robot_namespace="${namespace}"
+      suffix="back_left"
+      direction="ccw"
+      motor_constant="${motor_constant}"
+      moment_constant="${moment_constant}"
+      parent="${namespace}/base_link"
+      mass_rotor="${mass_rotor}"
+      radius_rotor="${radius_rotor}"
+      time_constant_up="${time_constant_up}"
+      time_constant_down="${time_constant_down}"
+      max_rot_velocity="${max_rot_velocity}"
+      motor_number="1"
+      rotor_drag_coefficient="${rotor_drag_coefficient}"
+      rolling_moment_coefficient="${rolling_moment_coefficient}"
+      color="Blue"
+      use_own_mesh="true"
+      mesh_pos_x="${mesh_aerprop_pos_x}"
+      mesh_pos_y="${mesh_aerprop_pos_y}"
+      mesh_pos_z="${mesh_aerprop_pos_z}"
+      mesh_ori_x="${mesh_aerprop_ori_x}"
+      mesh_ori_y="${mesh_aerprop_ori_y}"
+      mesh_ori_z="${mesh_aerprop_ori_z}"
+      mesh="${rotor_2_mesh_file}">
+      <origin xyz="-${arm_length_back_x} ${arm_length_back_y} ${rotor_offset_top}" rpy="0 0 0" />
+      <xacro:insert_block name="rotor_inertia" />
+    </xacro:vertical_rotor>
+
+    <xacro:vertical_rotor robot_namespace="${namespace}"
+      suffix="front_left"
+      direction="cw"
+      motor_constant="${motor_constant}"
+      moment_constant="${moment_constant}"
+      parent="${namespace}/base_link"
+      mass_rotor="${mass_rotor}"
+      radius_rotor="${radius_rotor}"
+      time_constant_up="${time_constant_up}"
+      time_constant_down="${time_constant_down}"
+      max_rot_velocity="${max_rot_velocity}"
+      motor_number="2"
+      rotor_drag_coefficient="${rotor_drag_coefficient}"
+      rolling_moment_coefficient="${rolling_moment_coefficient}"
+      color="Red"
+      use_own_mesh="true"
+      mesh_pos_x="${mesh_aerprop_pos_x}"
+      mesh_pos_y="${mesh_aerprop_pos_y}"
+      mesh_pos_z="${mesh_aerprop_pos_z}"
+      mesh_ori_x="${mesh_aerprop_ori_x}"
+      mesh_ori_y="${mesh_aerprop_ori_y}"
+      mesh_ori_z="${mesh_aerprop_ori_z}"
+      mesh="${rotor_1_mesh_file}">
+      <origin xyz="${arm_length_front_x} ${arm_length_front_y} ${rotor_offset_top}" rpy="0 0 0" />
+      <xacro:insert_block name="rotor_inertia" />
+    </xacro:vertical_rotor>
+
+    <xacro:vertical_rotor robot_namespace="${namespace}"
+      suffix="back_right"
+      direction="cw"
+      motor_constant="${motor_constant}"
+      moment_constant="${moment_constant}"
+      parent="${namespace}/base_link"
+      mass_rotor="${mass_rotor}"
+      radius_rotor="${radius_rotor}"
+      time_constant_up="${time_constant_up}"
+      time_constant_down="${time_constant_down}"
+      max_rot_velocity="${max_rot_velocity}"
+      motor_number="3"
+      rotor_drag_coefficient="${rotor_drag_coefficient}"
+      rolling_moment_coefficient="${rolling_moment_coefficient}"
+      color="Red"
+      use_own_mesh="true"
+      mesh_pos_x="${mesh_aerprop_pos_x}"
+      mesh_pos_y="${mesh_aerprop_pos_y}"
+      mesh_pos_z="${mesh_aerprop_pos_z}"
+      mesh_ori_x="${mesh_aerprop_ori_x}"
+      mesh_ori_y="${mesh_aerprop_ori_y}"
+      mesh_ori_z="${mesh_aerprop_ori_z}"
+      mesh="${rotor_1_mesh_file}">
+      <origin xyz="-${arm_length_back_x} -${arm_length_back_y} ${rotor_offset_top}" rpy="0 0 0" />
+      <xacro:insert_block name="rotor_inertia" />
+    </xacro:vertical_rotor>
+
+
+
+    <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/component_snippets.xacro" />
+
+    <!-- Mount a generic odometry sensor without odometry map (working everywhere). -->
+    <xacro:odometry_plugin_macro
+      namespace="${namespace}"
+      odometry_sensor_suffix="1"
+      parent_link="${namespace}/base_link"
+      pose_topic="odometry_sensor1/pose"
+      pose_with_covariance_topic="odometry_sensor1/pose_with_covariance"
+      position_topic="odometry_sensor1/position"
+      transform_topic="odometry_sensor1/transform"
+      odometry_topic="odometry_sensor1/odometry"
+      parent_frame_id="world"
+      child_frame_id="${namespace}/odometry_sensor1"
+      mass_odometry_sensor="0.00001"
+      measurement_divisor="1"
+      measurement_delay="0"
+      unknown_delay="0.0"
+      noise_normal_position="0 0 0"
+      noise_normal_quaternion="0 0 0"
+      noise_normal_linear_velocity="0 0 0"
+      noise_normal_angular_velocity="0 0 0"
+      noise_uniform_position="0 0 0"
+      noise_uniform_quaternion="0 0 0"
+      noise_uniform_linear_velocity="0 0 0"
+      noise_uniform_angular_velocity="0 0 0"
+      enable_odometry_map="false"
+      odometry_map=""
+      image_scale="">
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" /> <!-- [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] [kg m^2] -->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    </xacro:odometry_plugin_macro>
+
+    <!-- <arg name="enable_logging" default="false" />
+    <arg name="enable_ground_truth" default="true" />
+    <arg name="log_file" default="$(arg mav_name)" /> -->
+
+    <!-- Instantiate a controller. -->
+    <xacro:controller_plugin_macro namespace="${namespace}" imu_sub_topic="imu" />
+
+    <xacro:default_imu namespace="${namespace}" parent_link="${namespace}/base_link" />
+
+    <xacro:ground_truth_imu_and_odometry namespace="${namespace}" parent_link="${namespace}/base_link" />
+
+    <!-- Set up hydrodynamic plugin given as input parameter -->
+    <xacro:insert_block name="gazebo"/>
+
+    <!-- <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/hydrone_aerial_underwater_sensors.xacro" /> -->
+    <!-- <xacro:include filename="$(find hydrone_aerial_underwater_description)/urdf/hydrone_aerial_underwater_actuators.xacro" /> -->
+
+  </xacro:macro>
+
+  <!-- <joint name="scan_joint" type="fixed">
+    <parent link="${namespace}/base_link"/>
+    <child link="base_scan"/>
+    <origin xyz="0.0 0 -0.1" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_scan">
+    <visual>
+      <origin xyz="0 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="dark"/>
+    </collision>
+
+    <inertial>
+      <mass value="0.114" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+              iyy="0.001" iyz="0.0"
+              izz="0.001" />
+    </inertial>
+  </link> -->
+
+  <joint name="scan_joint" type="fixed">
+    <parent link="${namespace}/base_link"/>
+    <child link="base_scan"/>
+    <origin xyz="0.0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_scan">
+    <visual>
+      <origin xyz="0 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://hydrone_aerial_underwater_description/meshes/lds.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="dark"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0.015 0 -0.0065" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.0315" radius="0.055"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <mass value="0.114" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+              iyy="0.001" iyz="0.0"
+              izz="0.001" />
+    </inertial>
+  </link>
+
+  <!-- <joint name="ir_front_joint_0" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 0" xyz="0.02 0 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_0"/>
+  </joint>
+  <link name="base_ir_front_0">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 0" xyz="0.02 0 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_0"/>
+  </joint>
+  <link name="base_sonar_front_0">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_45" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 0.78539816339" xyz="0.01 0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_45"/>
+  </joint>
+  <link name="base_ir_front_45">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_45" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 0.78539816339" xyz="0.01 0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_45"/>
+  </joint>
+  <link name="base_sonar_front_45">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_90" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 1.57079632679" xyz="0.0 0.02 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_90"/>
+  </joint>
+  <link name="base_ir_front_90">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_90" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 1.57079632679" xyz="0. 0.02 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_90"/>
+  </joint>
+  <link name="base_sonar_front_90">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+
+  <joint name="ir_front_joint_135" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 2.35619449019" xyz="-0.01 0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_135"/>
+  </joint>
+  <link name="base_ir_front_135">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_135" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 2.35619449019" xyz="-0.01 0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_135"/>
+  </joint>
+  <link name="base_sonar_front_135">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_180" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 3.14159265359" xyz="-0.02 0 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_180"/>
+  </joint>
+  <link name="base_ir_front_180">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_180" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 3.14159265359" xyz="-0.02 0 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_180"/>
+  </joint>
+  <link name="base_sonar_front_180">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_225" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 3.92699081699" xyz="-0.01 -0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_225"/>
+  </joint>
+  <link name="base_ir_front_225">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_225" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 3.92699081699" xyz="-0.01 -0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_225"/>
+  </joint>
+  <link name="base_sonar_front_225">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_270" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 4.71238898038" xyz="0.0 -0.02 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_270"/>
+  </joint>
+  <link name="base_ir_front_270">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_270" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 4.71238898038" xyz="0. -0.02 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_270"/>
+  </joint>
+  <link name="base_sonar_front_270">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="ir_front_joint_315" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 5.49778714378" xyz="0.01 -0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_ir_front_315"/>
+  </joint>
+  <link name="base_ir_front_315">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0"      izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_front_joint_315" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin rpy="0 0 5.49778714378" xyz="0.01 -0.01 0.1" />
+    <parent link="${namespace}/base_link"/>
+    <child link="base_sonar_front_315"/>
+  </joint>
+  <link name="base_sonar_front_315">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link> -->
+
+
+  
+
+</robot>

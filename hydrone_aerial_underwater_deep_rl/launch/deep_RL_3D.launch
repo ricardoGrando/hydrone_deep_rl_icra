@@ -1,0 +1,37 @@
+<launch>
+  <arg name="deep_rl" default="sac.py"/> 
+  <arg name="ep" default="0"/> 
+  <arg name="world" default="stage_1"/> 
+  <arg name="root_dir" default="/home/ricardo/"/>  
+  <arg name="file_dir" default="sac_stage_1/sac_env1_3d_3_layers"/>
+  <arg name="graphic_int" default="false"/> 
+  <arg name="testing" default="false"/> 
+  <arg name="x" default="2.0"/> 
+  <arg name="y" default="2.0"/> 
+  <arg name="z" default="2.0"/> 
+  <arg name="arr_distance" default="0.5"/> 
+  <arg name="testing_eps" default="100"/> 
+    
+  
+  <!-- <node pkg="hydrone_aerial_underwater_deep_rl" type="combination_obstacle.py" name="obstacle" output="screen" /> -->
+  <include file="$(find hydrone_aerial_underwater_deep_rl)/launch/hydrone_deep_rl.launch" >
+    <arg name="world_name" value="$(arg world)" />
+    <arg name="gui" value="$(arg graphic_int)" />
+  </include>
+  <node pkg="hydrone_aerial_underwater_deep_rl" type="$(arg deep_rl)" name="sac_2D" output="screen">
+    <param name="ep_number"  value="$(arg ep)"/>
+    <param name="file_path"  value="$(arg file_dir)"/>
+    <param name="test_param"  value="$(arg testing)"/>
+    <param name="x_start"  value="$(arg x)"/>
+    <param name="y_start"  value="$(arg y)"/>
+    <param name="z_start"  value="$(arg z)"/>
+    <param name="arriving_distance"  value="$(arg arr_distance)"/>
+    <param name="num_eps_test"  value="$(arg testing_eps)"/>
+  </node>
+  <node pkg="hydrone_aerial_underwater_deep_rl" type="store_disk.py" name="store_disk" output="screen">
+    <param name="file_path"  value="$(arg file_dir)"/>
+    <param name="root_path"  value="$(arg root_dir)"/>
+    <param name="test_param"  value="$(arg testing)"/>
+  </node>
+  <node pkg="hydrone_aerial_underwater_deep_rl" type="wind.py" name="wind_node" output="screen"></node>
+</launch>

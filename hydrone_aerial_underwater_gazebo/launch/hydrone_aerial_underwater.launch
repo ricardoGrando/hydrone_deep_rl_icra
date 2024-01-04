@@ -39,7 +39,7 @@
 
   <group ns="$(arg namespace)">
     <param name="robot_description"
-             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_$(arg mode).xacro' --inorder
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
                       use_simplified_mesh:=$(arg use_simplified_mesh)
                       debug:=$(arg debug)
                       namespace:=$(arg namespace)

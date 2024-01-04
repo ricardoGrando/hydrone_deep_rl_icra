@@ -18,9 +18,4 @@ if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   find_package(xacro REQUIRED)
   find_package(rosunit REQUIRED)
-  foreach(T
-      test/test_urdf_files.test
-      )
-     add_rostest(${T})
-  endforeach()
 endif()

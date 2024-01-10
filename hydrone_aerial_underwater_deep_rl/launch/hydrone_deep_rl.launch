@@ -3,7 +3,7 @@
   <arg name="debug" default="0" doc="Starts the Gazebo plugins in debug mode for more verbose output"/>
 
   <arg name="x" default="0.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>    
+  <arg name="y" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="roll" default="0.0" doc="Roll angle of the vehicle's initial orientation"/>
   <arg name="pitch" default="0.0" doc="Pitch angle of the vehicle's initial orientation"/>
@@ -12,8 +12,8 @@
   <arg name="mode" default="default" doc="Vehicle's build configuration mode"/>
   <arg name="namespace" default="hydrone_aerial_underwater" doc="Namespace to spawn the vehicle"/>
   <arg name="use_simplified_mesh" default="false" doc="Use simplified geometries instead of the mesh"/>
-  
-  <arg name="world_name" default="stage_3_aerial"/>
+
+  <arg name="world_name" default="stage_1"/>
   <arg name="gui" default="true"/>
   <arg name="paused" default="false"/>
 
@@ -25,7 +25,7 @@
   <arg name="log_file" default="$(arg mav_name)"/>
   <arg name="wait_to_record_bag" default="false"/>
   <arg name="enable_mavlink_interface" default="false"/>
-  
+
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
       <arg name="world_name"  value="$(find hydrone_aerial_underwater_deep_rl)/worlds/$(arg world_name).world"/>
@@ -47,7 +47,7 @@
 
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
             args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
-  
+
     <node name="lee_position_controller_node" pkg="rotors_control" type="lee_position_controller_node" output="screen">
       <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
       <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
@@ -55,11 +55,11 @@
       <!-- <remap from="/hydrone_aerial_underwater/command/pose" to="/hydrone_aerial_underwater/command_aerial/pose" /> -->
     </node>
 
-    <node name="hydrone_aerial_underwater_deep_rl_velocity" pkg="hydrone_aerial_underwater_deep_rl" type="velocity.py" />    
+    <node name="hydrone_aerial_underwater_deep_rl_velocity" pkg="hydrone_aerial_underwater_deep_rl" type="velocity.py" />
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-    
+
   </group>
 
   <include file="$(find uuv_assistants)/launch/message_to_tf.launch">

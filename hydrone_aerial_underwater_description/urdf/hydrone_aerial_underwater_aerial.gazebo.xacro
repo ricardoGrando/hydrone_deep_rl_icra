@@ -12,7 +12,7 @@
     <!-- <xacro:property name="volume" value="1.83826"/> -->
     <!-- <xacro:property name="volume" value="0.00001"/> -->
     <!-- <xacro:property name="volume" value="0.001"/> -->
-    <xacro:property name="volume" value="0.0001"/>
+    <xacro:property name="volume" value="0.00005"/>
     <!-- <xacro:property name="volume" value="0.00005"/> -->
 
     <xacro:property name="M_PI" value="3.1415926535897931" />
@@ -27,7 +27,7 @@
                 <length>0.47</length>
                 <height>0.1</height>
             </box>
-                       
+
             <center_of_buoyancy>${cob}</center_of_buoyancy>
             <hydrodynamic_model>
                 <type>fossen</type>
@@ -40,26 +40,26 @@
                     0.0         0.0         0.0         0.0014    0.03      0.0011
                     0.0         0.0         0.0         0.0004    0.0011  0.0166
                 </added_mass>
-                
-           
+
+
                 <linear_damping>
-                    0.0125   0.0         0.0         0.0         0.0         0.0
-                    0.0         0.0125   0.0         0.0         0.0         0.0
-                    0.0         0.0         0.0499   0.0         0.0         0.0
-                    0.0         0.0         0.0         0.0125   0.0         0.0
-                    0.0         0.0         0.0         0.0         0.0125   0.0
-                    0.0         0.0         0.0         0.0         0.0         0.0499
+                    -10.0125   0.0         0.0         0.0         0.0         0.0
+                    0.0         -10.0125   0.0         0.0         0.0         0.0
+                    0.0         0.0         -10.0499   0.0         0.0         0.0
+                    0.0         0.0         0.0         -1.0125   0.0         0.0
+                    0.0         0.0         0.0         0.0         -1.0125   0.0
+                    0.0         0.0         0.0         0.0         0.0         -1.0499
                 </linear_damping>
-                
-    
+
+
                 <quadratic_damping>
-                    0.0125   0.0         0.0         0.0         0.0         0.0
-                    0.0         0.0125   0.0         0.0         0.0         0.0
-                    0.0         0.0         0.0499   0.0         0.0         0.0
-                    0.0         0.0         0.0         0.0125   0.0         0.0
-                    0.0         0.0         0.0         0.0         0.0125   0.0
-                    0.0         0.0         0.0         0.0         0.0         0.0499
-                </quadratic_damping> 
+                    -10.0125   0.0         0.0         0.0         0.0         0.0
+                    0.0         -10.0125   0.0         0.0         0.0         0.0
+                    0.0         0.0         -10.0499   0.0         0.0         0.0
+                    0.0         0.0         0.0         -1.0125   0.0         0.0
+                    0.0         0.0         0.0         0.0         -1.0125   0.0
+                    0.0         0.0         0.0         0.0         0.0         -1.0499
+                </quadratic_damping>
 
                 <!-- Added mass: see p.28 in Berg2012 -->
                 <!-- <added_mass>
@@ -87,7 +87,7 @@
                     -0.16554 -0.0058488 -0.38642 -0.010027  0.84269 -0.0011162
                     -0.078033  0.062726  0.010775  0.021019 -0.0011162  0.22432
                 </added_mass> -->
-                
+
                 <!-- Linear damping: see p.31 in Berg2012 -->
                 <!-- <linear_damping>
                     -74.82 -69.48 -728.4 -268.8 -309.77 -105
@@ -95,7 +95,7 @@
                 <!-- <linear_damping>
                     -0.07482 -0.06948 -0.7284 -0.2688 -0.30977 -0.105
                 </linear_damping> -->
-                
+
                 <!-- Non-linear damping: see p.30 in Berg2012 -->
                 <!-- <quadratic_damping>
                     -748.22 -992.53 -1821.01 -672 -774.44 -523.27
@@ -130,7 +130,7 @@
                     <max_angle>${3*M_PI/4}</max_angle>
                     <min_angle>0</min_angle>
                     <max_angle>${2*M_PI - M_PI/4}</max_angle>
-                </horizontal>                
+                </horizontal>
             </scan>
             <range>
             <min>0.5</min>
@@ -148,7 +148,6 @@
             <frameName>base_scan</frameName>
         </plugin>
         </sensor>
-    </gazebo>            
+    </gazebo>
 
 </robot>
-

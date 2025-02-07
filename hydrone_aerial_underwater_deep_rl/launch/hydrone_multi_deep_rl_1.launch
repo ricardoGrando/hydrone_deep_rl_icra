@@ -1,0 +1,188 @@
+<!-- Spawns the hydrone vehicle in the simulation -->
+<launch>
+  <arg name="debug" default="0" doc="Starts the Gazebo plugins in debug mode for more verbose output"/>
+
+  <arg name="x0" default="1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y0" default="1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z0" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x1" default="1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y1" default="-1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z1" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x2" default="-1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y2" default="1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z2" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x3" default="-1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y3" default="-1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z3" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x4" default="0.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y4" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z4" default="3.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="roll" default="0.0" doc="Roll angle of the vehicle's initial orientation"/>
+  <arg name="pitch" default="0.0" doc="Pitch angle of the vehicle's initial orientation"/>
+  <arg name="yaw" default="0.0" doc="Yaw angle of the vehicle's initial orientation"/>
+
+  <arg name="mode" default="default" doc="Vehicle's build configuration mode"/>
+  <arg name="namespace0" default="hydrone_aerial_underwater0" doc="Namespace to spawn the vehicle"/>
+  <arg name="namespace1" default="hydrone_aerial_underwater1" doc="Namespace to spawn the vehicle"/>
+  <arg name="namespace2" default="hydrone_aerial_underwater2" doc="Namespace to spawn the vehicle"/>
+  <arg name="namespace3" default="hydrone_aerial_underwater3" doc="Namespace to spawn the vehicle"/>
+  <arg name="namespace4" default="hydrone_aerial_underwater4" doc="Namespace to spawn the vehicle"/>
+  <arg name="use_simplified_mesh" default="false" doc="Use simplified geometries instead of the mesh"/>
+
+  <arg name="world_name" default="stage_1"/>
+  <arg name="gui" default="true"/>
+  <arg name="paused" default="false"/>
+
+  <arg name="mav_name" default="hydrone"/>
+  <arg name="model" default="$(find hydrone_aerial_underwater_description)/urdf/$(arg mav_name)_base.xacro"/>
+  <arg name="tf_prefix" default="$(optenv ROS_NAMESPACE)"/>
+  <arg name="enable_logging" default="false"/>
+  <arg name="enable_ground_truth" default="true"/>
+  <arg name="log_file" default="$(arg mav_name)"/>
+  <arg name="wait_to_record_bag" default="false"/>
+  <arg name="enable_mavlink_interface" default="false"/>
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name"  value="$(find hydrone_aerial_underwater_deep_rl)/worlds/$(arg world_name).world"/>
+      <arg name="paused" value="$(arg paused)"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="headless" value="false"/>
+      <arg name="debug" value="false"/>
+      <arg name="verbose" value="true"/>
+  </include>
+
+  <group ns="$(arg namespace0)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace0)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner_0" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x0) -y $(arg y0) -z $(arg z0) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace0) -param /$(arg namespace0)/robot_description"/>
+
+    <node name="lee_position_controller_node_0" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+      <!-- <remap from="/hydrone_aerial_underwater/command/pose" to="/hydrone_aerial_underwater/command_aerial/pose" /> -->
+    </node>
+
+    <node name="hydrone_aerial_underwater_deep_rl_velocity_0" pkg="hydrone_aerial_underwater_deep_rl" type="velocity0.py" />
+
+    <node name="robot_state_publisher0" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher0" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+  <group ns="$(arg namespace1)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace1)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner_1" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x1) -y $(arg y1) -z $(arg z1) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace1) -param /$(arg namespace1)/robot_description"/>
+
+    <node name="lee_position_controller_node_1" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+    </node>
+
+    <node name="hydrone_aerial_underwater_deep_rl_velocity_1" pkg="hydrone_aerial_underwater_deep_rl" type="velocity1.py" />
+
+    <node name="robot_state_publisher1" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher1" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+  <!-- <include file="$(find uuv_assistants)/launch/message_to_tf.launch">
+    <arg name="namespace0" value="$(arg namespace0)"/>
+    <arg name="world_frame" value="world"/>
+    <arg name="child_frame_id" value="/$(arg namespace0)/base_link"/>
+  </include> -->
+
+  <group ns="$(arg namespace2)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace2)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner_2" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x2) -y $(arg y2) -z $(arg z2) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace2) -param /$(arg namespace2)/robot_description"/>
+
+    <node name="lee_position_controller_node_2" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+    </node>
+
+    <node name="hydrone_aerial_underwater_deep_rl_velocity_2" pkg="hydrone_aerial_underwater_deep_rl" type="velocity2.py" />
+
+    <node name="robot_state_publisher2" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher2" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+  <group ns="$(arg namespace3)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace3)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner_3" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x3) -y $(arg y3) -z $(arg z3) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace3) -param /$(arg namespace3)/robot_description"/>
+
+    <node name="lee_position_controller_node_3" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+    </node>
+
+    <node name="hydrone_aerial_underwater_deep_rl_velocity_3" pkg="hydrone_aerial_underwater_deep_rl" type="velocity3.py" />
+
+    <node name="robot_state_publisher3" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher3" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+  <group ns="$(arg namespace4)">
+    <param name="robot_description"
+             command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
+                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      debug:=$(arg debug)
+                      namespace:=$(arg namespace4)
+                      inertial_reference_frame:=world" />
+
+    <node name="urdf_spawner_4" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -x $(arg x4) -y $(arg y4) -z $(arg z4) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace4) -param /$(arg namespace4)/robot_description"/>
+
+    <node name="lee_position_controller_node_4" pkg="rotors_control" type="lee_position_controller_node" output="screen">
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/lee_controller_hydrone.yaml" />
+      <rosparam command="load" file="$(find hydrone_aerial_underwater_gazebo)/resource/hydrone.yaml" />
+      <remap from="odometry" to="odometry_sensor1/odometry" />
+    </node>
+
+    <node name="hydrone_aerial_underwater_deep_rl_velocity_4" pkg="hydrone_aerial_underwater_deep_rl" type="velocity4.py" />
+
+    <node name="robot_state_publisher4" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="joint_state_publisher4" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  </group>
+
+
+  <!-- RViz -->
+  <!-- <arg name="rviz" default="true"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="$(anon rviz)" respawn="false" output="screen" args="-d $(find velodyne_description)/rviz/example.rviz" /> -->
+
+</launch>

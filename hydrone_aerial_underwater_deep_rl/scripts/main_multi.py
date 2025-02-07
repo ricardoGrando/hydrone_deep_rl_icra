@@ -26,7 +26,14 @@ if __name__=="__main__":
 
     env = gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, goal_list=None, agent_number=0, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model.sdf')
     env.reset()
-    rate = rospy.Rate(10)
-    while not rospy.is_shutdown():
-        env.step(np.array([0.1, 0.0, 0.0]))
-        rate.sleep()
+
+    args = get_env_parameters(args,env)
+
+    if args.Algorithm == "MADDPG":
+        args = get_maddpg_args(args)
+        trainer = MADDPG.MADDPG(args = args,policy = ContinuousMLP)
+
+    # rate = rospy.Rate(10)
+    # while not rospy.is_shutdown():
+    #     env.step(np.array([0.1, 0.0, 0.0]))
+    #     rate.sleep()

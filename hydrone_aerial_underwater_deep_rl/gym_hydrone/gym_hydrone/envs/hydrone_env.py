@@ -36,7 +36,7 @@ class hydroneEnv(gym.Env):
 
         self.pub_cmd_vel = rospy.Publisher('/hydrone_aerial_underwater'+str(self.agent_number)+'/cmd_vel', Twist, queue_size=1)
         self.sub_odom = rospy.Subscriber('/hydrone_aerial_underwater'+str(self.agent_number)+'/odometry_sensor1/odometry', Odometry, self.getOdometry)
-        
+
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
@@ -87,6 +87,8 @@ class hydroneEnv(gym.Env):
 
         self.start_time = time.time()
         self.last_step_time = self.start_time
+
+        self.state_space = np.zeros(shape=(observation_size,))
 
         self.seed()
 

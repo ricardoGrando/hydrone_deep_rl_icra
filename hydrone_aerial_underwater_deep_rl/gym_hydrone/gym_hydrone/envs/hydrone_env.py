@@ -16,7 +16,7 @@ from gym_hydrone.envs.mytf import euler_from_quaternion
 from gym_hydrone.envs import Respawn
 
 class hydroneEnv(gym.Env):
-    def __init__(self, observation_mode=0, env_stage=1, max_env_size=None, continuous=False, observation_size=24,
+    def __init__(self, observation_mode=0, env_stage=1, max_env_size=None, continuous=False, lidar_samples=20,
                  action_size=5, min_range=0.5, max_range=10, min_ang_vel=-0.25, max_ang_vel=0.25, min_linear_vel=-0.25,
                  max_linear_vel=0.25, min_altitude_vel=-0.25, max_altitude_vel=0.25, goalbox_distance=0.85, collision_distance=0.65, reward_goal=200.,
 
@@ -52,7 +52,7 @@ class hydroneEnv(gym.Env):
         self.respawn_goal.setGoalList(goal_list)
 
         self.observation_mode = observation_mode
-        self.observation_size = observation_size
+        self.lidar_samples = lidar_samples
         self.min_range = min_range
         self.max_range = max_range
         self.min_ang_vel = min_ang_vel
@@ -79,6 +79,8 @@ class hydroneEnv(gym.Env):
 
         low, high = self.get_observation_space_values()
         self.observation_space = spaces.Box(low, high)
+        # observation space == state space
+        #self.state_space = np.zeros(shape=(observation_size,))
 
         self.num_timesteps = 0
         self.lidar_distances = None
@@ -88,8 +90,6 @@ class hydroneEnv(gym.Env):
         self.start_time = time.time()
         self.last_step_time = self.start_time
 
-        self.state_space = np.zeros(shape=(observation_size,))
-
         self.seed()
 
     def seed(self, seed=None):
@@ -97,14 +97,14 @@ class hydroneEnv(gym.Env):
         return [seed]
 
     def get_action_space_values(self):
-        low = np.array([self.min_ang_vel, self.min_linear_vel, self.min_altitude_vel])
-        high = np.array([self.max_ang_vel, self.max_linear_vel, self.max_altitude_vel])
-        shape_value = 3
+        low = np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel])
+        high = np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel])
+        shape_value = low.shape[0]
         return low, high, shape_value
 
     def get_observation_space_values(self):
-        low = np.append(np.full(self.observation_size, self.min_range), np.array([-math.pi, 0], dtype=np.float32))
-        high = np.append(np.full(self.observation_size, self.max_range), np.array([math.pi, self.max_env_size], dtype=np.float32))
+        low = np.append(np.full(self.lidar_samples, self.min_range), np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel, 0, -math.pi, -math.pi], dtype=np.float32))
+        high = np.append(np.full(self.lidar_samples, self.max_range), np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel, np.inf, math.pi, math.pi], dtype=np.float32))
         return low, high
 
     def _getGoalDistace(self):
@@ -139,7 +139,7 @@ class hydroneEnv(gym.Env):
     def episode_finished(self):
         pass
 
-    def get_env_state(self):
+    def get_lidar_state(self):
         return self.lidar_distances
 
     def getState(self, scan):
@@ -160,7 +160,7 @@ class hydroneEnv(gym.Env):
         if self.test_real:
             while self.image is None:
                 time.sleep(0.1)
-            return [self.get_env_state(), self.image]
+            return [self.get_lidar_state(), self.image]
 
         time_info = self.get_time_info()
         current_distance = self._getGoalDistace()
@@ -178,7 +178,7 @@ class hydroneEnv(gym.Env):
                 if self.respawn_goal.last_index is (self.respawn_goal.len_goal_list - 1):
                     done = True
                     self.episode_finished()
-        return self.get_env_state() + [heading[0], heading[1], current_distance], done
+        return self.get_lidar_state() + [heading[0], heading[1], current_distance], done
 
     def get_done_reward(self, lidar, distance):
         done = False
@@ -311,7 +311,7 @@ class hydroneEnv(gym.Env):
             if self.initGoal:
                 self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition()
                 self.initGoal = False
-                time.sleep(1)
+                #time.sleep(1)
             else:
                 self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(True, delete=True)
 

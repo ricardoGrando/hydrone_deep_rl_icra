@@ -46,7 +46,7 @@ class Respawn:
         self.goal_position.position.x = None
         self.goal_position.position.y = None
         self.goal_position.position.z = None
-        self.modelName = 'goal'
+        self.modelName = model_path[-10:-4]
         self.check_model = False
         self.sub_model = rospy.Subscriber('gazebo/model_states', ModelStates, self.checkModel)
 
@@ -105,6 +105,5 @@ class Respawn:
             self.goal_position.position.y = self.goal_y_list[self.index]
             self.goal_position.position.z = self.goal_z_list[self.index]
 
-        time.sleep(0.5)
         self.respawnModel()
         return self.goal_position.position.x, self.goal_position.position.y, self.goal_position.position.z

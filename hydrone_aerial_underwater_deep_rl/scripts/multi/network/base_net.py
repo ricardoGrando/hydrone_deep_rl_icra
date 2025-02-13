@@ -1,9 +1,11 @@
 import torch
-from torch import nn 
+from torch import nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from marl_planner.common.utils import *
-    
+import sys
+sys.path.append('../multi')
+from multi.common.utils import *
+
 class ContinuousMLP(nn.Module):
 
     def __init__(self,args,agent):
@@ -54,7 +56,7 @@ class DiscreteMLP(nn.Module):
         action = self.actionNet(state)
 
         return action
-    
+
 class DiscreteGaussianNet(nn.Module):
 
     def __init__(self, args,agent):
@@ -93,7 +95,7 @@ class DiscreteGaussianNet(nn.Module):
         output = PolicyOps(action=action, log_prob=log_prob, entropy=entropy, pi=out, reg_pi=regularise_action, specific_log_prob=specific_log_prob)
 
         return output
-    
+
 class ContGaussianNet(nn.Module):
 
     def __init__(self, args,agent):
@@ -120,7 +122,7 @@ class ContGaussianNet(nn.Module):
         self.stdNet = nn.Sequential(
             nn.Linear(256,self.n_actions)
         )
-    
+
     def forward(self,state):
 
         X = self.actorNet(state)
@@ -159,7 +161,7 @@ class RNN(nn.Module):
         self.qNet = nn.Linear(args.rnn_hidden,args.n_actions[agent])
 
     def forward(self,obs,hidden_unit):
-        
+
         obs = obs.reshape(-1,self.input_shape)
         x = self.actionNet(obs)
         h_in = hidden_unit.reshape(-1,self.args.rnn_hidden)

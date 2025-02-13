@@ -1,9 +1,9 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='goal_box'>
+  <model name='goal_box_1'>
     <pose frame=''>0 0 0 0 -0 -1.5708</pose>
-    <link name='goal_box'>
-      <visual name='goal_box'>
+    <link name='goal_box_1'>
+      <visual name='goal_box_1'>
         <pose frame=''>0 0 0.0005 0 -0 0</pose>
         <geometry>
           <box>
@@ -13,7 +13,7 @@
         <material>
           <script>
             <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Red</name>
+            <name>Gazebo/Blue</name>
           </script>
           <ambient>1 0 0 1</ambient>
         </material>

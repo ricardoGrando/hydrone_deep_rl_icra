@@ -16,8 +16,8 @@ class MADDPG:
 
         self.args = args # Argument values given by the user
         self.learning_step = 0 # counter to keep track of learning
-        self.obs_shape = self.args.input_shape[self.args.env_agents[0]]
-        self.action_space = self.args.n_actions[self.args.env_agents[0]]
+        self.obs_shape = self.args.input_shape[0]
+        self.action_space = self.args.n_actions[0]
         self.policy = policy
 
         self.reset()

@@ -12,6 +12,7 @@ import gym_hydrone
 
 from multi.common.arguments import *
 from multi.agent import MADDPG, COMA, MAAC#, QMIX, MASoftQ, VDN, MATD3, FACMAC, FOP
+from multi.network.base_net import DiscreteMLP, DiscreteGaussianNet, ContinuousMLP, RNN, ContGaussianNet
 
 if __name__=="__main__":
 
@@ -24,10 +25,19 @@ if __name__=="__main__":
     else:
         args.is_continous = True
 
-    env = gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, goal_list=None, agent_number=0, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model.sdf')
-    env.reset()
+    # must be equal for all agents, 20 lidar, distance goal, angle x-y, angle z-distance,
+    lidar_samples = 20
+    envs = []
+    envs.append(gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, lidar_samples=lidar_samples, agent_number=0, goal_list=None, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'))
+    envs.append(gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, lidar_samples=lidar_samples, agent_number=1, goal_list=None, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model1.sdf'))
+    envs.append(gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, lidar_samples=lidar_samples, agent_number=2, goal_list=None, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model2.sdf'))
+    envs.append(gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, lidar_samples=lidar_samples, agent_number=3, goal_list=None, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model3.sdf'))
+    envs.append(gym.make('hydrone_Circuit_Simple-v0', env_stage=1, observation_mode=0, continuous=True, lidar_samples=lidar_samples, agent_number=4, goal_list=None, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model4.sdf'))
 
-    args = get_env_parameters(args,env)
+    for i in range (0, len(envs)):
+        envs[i].reset()
+
+    args = get_env_parameters(args,envs)
 
     if args.Algorithm == "MADDPG":
         args = get_maddpg_args(args)

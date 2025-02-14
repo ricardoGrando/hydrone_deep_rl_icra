@@ -25,7 +25,7 @@ class MADDPG:
     def choose_action(self,observation,stage="training"):
 
         action = {}
-        for agent in self.args.env_agents:
+        for agent in range (0, self.args.n_agents):
 
             state = torch.Tensor(observation[agent])
             if stage == "training":
@@ -92,34 +92,35 @@ class MADDPG:
 
         self.replay_buffer = ReplayBuffer(self.args,reward_type="ind",action_space="continuous")
         # Exploration Technique
-        self.noiseOBJ = {agent:OUActionNoise(mean=np.zeros(self.args.n_actions[agent]), std_deviation=float(0.9) * np.ones(self.args.n_actions[agent])) for agent in self.args.env_agents}
 
-        self.PolicyNetwork = {agent:self.policy(self.args,agent) for agent in self.args.env_agents}
-        self.PolicyOptimizer = {agent:torch.optim.Adam(self.PolicyNetwork[agent].parameters(),lr=self.args.actor_lr) for agent in self.args.env_agents}
-        self.TargetPolicyNetwork = {agent:self.policy(self.args,agent) for agent in self.args.env_agents}
+        self.noiseOBJ = {agent:OUActionNoise(mean=np.zeros(self.args.n_actions[agent]), std_deviation=float(0.9) * np.ones(self.args.n_actions[agent])) for agent in range (0, self.args.n_agents)}
 
-        self.Qnetwork = {agent:MADDPGCritic(self.args,agent) for agent in self.args.env_agents}
-        self.QOptimizer = {agent:torch.optim.Adam(self.Qnetwork[agent].parameters(),lr=self.args.critic_lr) for agent in self.args.env_agents}
-        self.TargetQNetwork = {agent:MADDPGCritic(self.args,agent) for agent in self.args.env_agents}
+        self.PolicyNetwork = {agent:self.policy(self.args,agent) for agent in range (0, self.args.n_agents)}
+        self.PolicyOptimizer = {agent:torch.optim.Adam(self.PolicyNetwork[agent].parameters(),lr=self.args.actor_lr) for agent in range (0, self.args.n_agents)}
+        self.TargetPolicyNetwork = {agent:self.policy(self.args,agent) for agent in range (0, self.args.n_agents)}
+
+        self.Qnetwork = {agent:MADDPGCritic(self.args,agent) for agent in range (0, self.args.n_agents)}
+        self.QOptimizer = {agent:torch.optim.Adam(self.Qnetwork[agent].parameters(),lr=self.args.critic_lr) for agent in range (0, self.args.n_agents)}
+        self.TargetQNetwork = {agent:MADDPGCritic(self.args,agent) for agent in range (0, self.args.n_agents)}
 
         self.network_hard_updates()
 
     def network_hard_updates(self):
 
-        for agent in self.args.env_agents:
+        for agent in range (0, self.args.n_agents):
             hard_update(self.TargetQNetwork[agent],self.Qnetwork[agent])
             hard_update(self.TargetPolicyNetwork[agent],self.PolicyNetwork[agent])
 
     def network_soft_updates(self):
 
-        for agent in self.args.env_agents:
+        for agent in range (0, self.args.n_agents):
             soft_update(self.TargetQNetwork[agent],self.Qnetwork[agent],self.args.tau)
             soft_update(self.TargetPolicyNetwork[agent],self.PolicyNetwork[agent],self.args.tau)
 
     def save(self,env):
         print("-------SAVING NETWORK -------")
 
-        for agent in self.args.env_agents:
+        for agent in range (0, self.args.n_agents):
             os.makedirs("config/saves/training_weights/"+ env + f"/maddpg_weights/{agent}", exist_ok=True)
             torch.save(self.PolicyNetwork[agent].state_dict(),"config/saves/training_weights/"+ env + f"/maddpg_weights//{agent}/actorWeights.pth")
             torch.save(self.Qnetwork[agent].state_dict(),"config/saves/training_weights/"+ env + f"/maddpg_weights/{agent}/QWeights.pth")
@@ -128,7 +129,7 @@ class MADDPG:
 
     def load(self,env):
 
-        for agent in self.args.env_agents:
+        for agent in range (0, self.args.n_agents):
             self.PolicyNetwork[agent].load_state_dict(torch.load("config/saves/training_weights/"+ env + f"/maddpg_weights//{agent}/actorWeights.pth",map_location=torch.device('cpu')))
             self.Qnetwork[agent].load_state_dict(torch.load("config/saves/training_weights/"+ env + f"/maddpg_weights/{agent}/QWeights.pth",map_location=torch.device('cpu')))
             self.TargetPolicyNetwork[agent].load_state_dict(torch.load("config/saves/training_weights/"+ env + f"/maddpg_weights/{agent}/TargetactorWeights.pth",map_location=torch.device('cpu')))

@@ -53,7 +53,8 @@ class Respawn:
     def checkModel(self, model):
         self.check_model = False
         for i in range(len(model.name)):
-            if model.name[i] == "goal":
+            #print(model.name[i])
+            if model.name[i] == self.modelName:
                 self.check_model = True
 
     def respawnModel(self):
@@ -67,14 +68,14 @@ class Respawn:
                 pass
 
     def deleteModel(self):
-        while True:
-            if self.check_model:
-                rospy.wait_for_service('gazebo/delete_model')
-                del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
-                del_model_prox(self.modelName)
-                break
-            else:
-                pass
+        #while True:
+        if self.check_model:
+            rospy.wait_for_service('gazebo/delete_model')
+            del_model_prox = rospy.ServiceProxy('gazebo/delete_model', DeleteModel)
+            del_model_prox(self.modelName)
+            # print(self.check_model)
+        else:
+            pass
 
     def initIndex(self):
         self.index = 0
@@ -93,9 +94,8 @@ class Respawn:
         self.init_goal_z = self.goal_z_list[0]
         self.initIndex()
 
-    def getPosition(self, position_check=False, delete=False):
-        if delete:
-            self.deleteModel()
+    def getPosition(self, position_check=False):
+        self.deleteModel()
 
         if position_check:
             self.index = (self.last_index + 1) % self.len_goal_list

@@ -308,12 +308,16 @@ class hydroneEnv(gym.Env):
                 except:
                     pass
 
-            if self.initGoal:
-                self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition()
-                self.initGoal = False
-                #time.sleep(1)
-            else:
-                self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(True, delete=True)
+            # print("RRRRRRRRRRRR")
+            #
+            # if self.initGoal:
+            #     print("AAAAAAAAAAAAAAA")
+            #     self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition()
+            #     self.initGoal = False
+            #     #time.sleep(1)
+            # else:
+            #     print("CCCCCCCCCCCCCCCCC")
+            self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(position_check=True)
 
             self.goal_distance = self.old_distance = self._getGoalDistace()
             state, _ = self.getState(data)

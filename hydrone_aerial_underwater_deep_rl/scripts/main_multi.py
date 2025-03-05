@@ -22,13 +22,16 @@ def train(args,envs,trainer):
     os.makedirs("/home/ricardo/config/saves/rl_rewards/" +args.Environment, exist_ok=True)
     os.makedirs("/home/ricardo/config/saves/images/" +args.Environment, exist_ok=True)
     sample_added = 0
+
     for i in range(args.n_episodes):
 
-        for agent in range (0, args.n_agents):
-            observation = {envs[agent].reset() for agent in range (0, args.n_agents)}
+        #observation = {envs[agent].reset() for agent in range (0, args.n_agents)}
 
-        print(envs[0].initGoal)
-        print(observation)
+        for agent in range (0, args.n_agents):
+            rospy.loginfo(str(envs[agent].reset()))
+
+        rospy.loginfo(str(envs[agent].reset() for agent in range (0, args.n_agents)))
+
         break
 
     #     global_reward = 0

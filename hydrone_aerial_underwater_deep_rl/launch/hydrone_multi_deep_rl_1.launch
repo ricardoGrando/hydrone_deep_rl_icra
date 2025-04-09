@@ -2,14 +2,14 @@
 <launch>
   <arg name="debug" default="0" doc="Starts the Gazebo plugins in debug mode for more verbose output"/>
 
-  <arg name="x0" default="1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y0" default="1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x0" default="0.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y0" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z0" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="x1" default="1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y1" default="-1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x1" default="2.5" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y1" default="2.5" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z1" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="x2" default="-1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y2" default="1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x2" default="0.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y2" default="-2.5" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z2" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="x3" default="-1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="y3" default="-1.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
@@ -28,6 +28,7 @@
   <arg name="namespace3" default="hydrone_aerial_underwater3" doc="Namespace to spawn the vehicle"/>
   <arg name="namespace4" default="hydrone_aerial_underwater4" doc="Namespace to spawn the vehicle"/>
   <arg name="use_simplified_mesh" default="false" doc="Use simplified geometries instead of the mesh"/>
+  <arg name="use_simplified_mesh_center" default="true" doc="Use simplified geometries instead of the mesh"/>
 
   <arg name="world_name" default="stage_1"/>
   <arg name="gui" default="true"/>
@@ -56,7 +57,7 @@
   <group ns="$(arg namespace0)">
     <param name="robot_description"
              command="$(find xacro)/xacro '$(find hydrone_aerial_underwater_description)/robots/hydrone_aerial_underwater_aerial.xacro' --inorder
-                      use_simplified_mesh:=$(arg use_simplified_mesh)
+                      use_simplified_mesh:=$(arg use_simplified_mesh_center)
                       debug:=$(arg debug)
                       namespace:=$(arg namespace0)
                       inertial_reference_frame:=world" />

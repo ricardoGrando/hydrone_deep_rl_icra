@@ -5,6 +5,7 @@ import gym
 import numpy as np
 import math
 import time
+from std_msgs.msg import Float64, Bool
 from geometry_msgs.msg import Twist, Point, Pose
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import LaserScan
@@ -20,7 +21,7 @@ class hydroneEnv(gym.Env):
                  action_size=5, min_range=0.5, max_range=10, min_ang_vel=-0.25, max_ang_vel=0.25, min_linear_vel=-0.25,
                  max_linear_vel=0.25, min_altitude_vel=-0.25, max_altitude_vel=0.25, goalbox_distance=0.85, collision_distance=0.65, reward_goal=200.,
 
-                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, model_path='/home/ricardo/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model.sdf'):
+                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, model_path='/home/adminutec/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'):
 
         self.goal_x = 0
         self.goal_y = 0
@@ -36,6 +37,10 @@ class hydroneEnv(gym.Env):
 
         self.pub_cmd_vel = rospy.Publisher('/hydrone_aerial_underwater'+str(self.agent_number)+'/cmd_vel', Twist, queue_size=1)
         self.sub_odom = rospy.Subscriber('/hydrone_aerial_underwater'+str(self.agent_number)+'/odometry_sensor1/odometry', Odometry, self.getOdometry)
+
+        self.uncertainty = rospy.Subscriber('/uncertainty_dealer/target_pose', Pose, self.uncertaintyDealer)
+        self.target_mp = Pose()
+        self.pub_uncertainty = rospy.Publisher('/uncertainty_dealer/uncertainty_set', Bool, queue_size=1)
 
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -92,6 +97,12 @@ class hydroneEnv(gym.Env):
 
         self.seed()
 
+    def uncertaintyDealer(self, msg):
+        self.target_mp = msg
+    
+    def set_uncertainty(self):
+        self.pub_uncertainty.publish(True)
+  
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -202,7 +213,7 @@ class hydroneEnv(gym.Env):
         if self.get_goalbox:
             reward = self.reward_goal
             self.pub_cmd_vel.publish(Twist())
-            self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(True, delete=True)
+            self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(True)
             self.goal_distance = self._getGoalDistace()
             self.get_goalbox = False
         elif done:
@@ -210,7 +221,7 @@ class hydroneEnv(gym.Env):
             self.pub_cmd_vel.publish(Twist())
             if self.respawn_goal.last_index != 0:
                 self.respawn_goal.initIndex()
-                self.goal_x, self.goal_y, self.goal_z= self.respawn_goal.getPosition(True, delete=True)
+                self.goal_x, self.goal_y, self.goal_z= self.respawn_goal.getPosition(True)
                 self.goal_distance = self._getGoalDistace()
         else:
             reward = 0
@@ -270,7 +281,7 @@ class hydroneEnv(gym.Env):
     def get_scan(self):
         return self.lidar_distances
 
-    def reset(self, new_random_goals=True, goal=None):
+    def reset(self, new_random_goals=True, goal=None, persistent=False):
         if not self.test_real:
             if new_random_goals:
                 if self.env_stage == 1:
@@ -295,11 +306,12 @@ class hydroneEnv(gym.Env):
             else:
                 self.respawn_goal.setGoalList(np.array(goal))
 
-            rospy.wait_for_service('/gazebo/reset_world')
-            try:
-                self.reset_proxy()
-            except rospy.ServiceException:
-                print("gazebo/reset_simulation service call failed")
+            if not persistent:
+                rospy.wait_for_service('/gazebo/reset_world')
+                try:
+                    self.reset_proxy()
+                except rospy.ServiceException:
+                    print("gazebo/reset_simulation service call failed")
 
             data = None
             while data is None:
@@ -308,15 +320,15 @@ class hydroneEnv(gym.Env):
                 except:
                     pass
 
-            # print("RRRRRRRRRRRR")
-            #
-            # if self.initGoal:
-            #     print("AAAAAAAAAAAAAAA")
-            #     self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition()
-            #     self.initGoal = False
-            #     #time.sleep(1)
-            # else:
-            #     print("CCCCCCCCCCCCCCCCC")
+                # print("RRRRRRRRRRRR")
+                #
+                # if self.initGoal:
+                #     print("AAAAAAAAAAAAAAA")
+                #     self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition()
+                #     self.initGoal = False
+                #     #time.sleep(1)
+                # else:
+                #     print("CCCCCCCCCCCCCCCCC")
             self.goal_x, self.goal_y, self.goal_z = self.respawn_goal.getPosition(position_check=True)
 
             self.goal_distance = self.old_distance = self._getGoalDistace()

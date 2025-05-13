@@ -6,12 +6,12 @@
   <arg name="y0" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z0" default="3.0" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="x1" default="3.5" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y1" default="3.5" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y1" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z1" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="x2" default="0.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="y2" default="-2.5" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="z2" default="2.5" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
-  <arg name="x3" default="-3.5" doc="X coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="y2" default="0.0" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="z2" default="2.25" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
+  <arg name="x3" default="-1.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="y3" default="-3.5" doc="Y coordinate of the vehicle's initial position (in ENU)"/>
   <arg name="z3" default="2.75" doc="Z coordinate of the vehicle's initial position (in ENU)"/>
   <!-- <arg name="x4" default="-2.0" doc="X coordinate of the vehicle's initial position (in ENU)"/>

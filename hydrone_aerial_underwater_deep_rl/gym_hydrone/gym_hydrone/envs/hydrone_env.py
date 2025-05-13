@@ -21,7 +21,7 @@ class hydroneEnv(gym.Env):
                  action_size=5, min_range=0.5, max_range=10, min_ang_vel=-0.25, max_ang_vel=0.25, min_linear_vel=-0.25,
                  max_linear_vel=0.25, min_altitude_vel=-0.25, max_altitude_vel=0.25, goalbox_distance=0.85, collision_distance=0.65, reward_goal=200.,
 
-                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, model_path='/home/adminutec/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'):
+                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, persistent=False, model_path='/home/adminutec/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'):
 
         self.goal_x = 0
         self.goal_y = 0
@@ -41,6 +41,8 @@ class hydroneEnv(gym.Env):
         self.uncertainty = rospy.Subscriber('/uncertainty_dealer/target_pose', Pose, self.uncertaintyDealer)
         self.target_mp = Pose()
         self.pub_uncertainty = rospy.Publisher('/uncertainty_dealer/uncertainty_set', Bool, queue_size=1)
+        self.persistent = persistent
+        self.persistent_alt = 3.0
 
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_world', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
@@ -175,9 +177,11 @@ class hydroneEnv(gym.Env):
 
         time_info = self.get_time_info()
         current_distance = self._getGoalDistace()
-        if min(self.lidar_distances) < self.collision_distance:
-            # print(f'{time_info}: Collision!!')
-            done = True
+        ##########################################################################################################
+        if not self.persistent:
+            if min(self.lidar_distances) < self.collision_distance:
+                # print(f'{time_info}: Collision!!')
+                done = True
 
         if (self.position.z < -0.9 or self.position.z > 5.0):
             done = True
@@ -254,6 +258,13 @@ class hydroneEnv(gym.Env):
         vel_cmd.linear.x = self.linear_vel
         vel_cmd.linear.z = self.altitude_vel
         vel_cmd.angular.z = self.ang_vel
+
+        if self.persistent:
+            if self.position.z > self.persistent_alt+0.1:
+                vel_cmd.linear.z = -0.05
+            elif self.position.z < self.persistent_alt-0.1:
+                vel_cmd.linear.z = 0.05
+        
         self.pub_cmd_vel.publish(vel_cmd)
 
         data = None

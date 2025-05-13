@@ -123,25 +123,25 @@
 
     <include>
       <uri>model://obstacle_1</uri>
-      <pose>2.0 2.0 3.0 0.0 0 0</pose>
+      <pose>2.0 2.0 2. 0.0 0 0</pose>
       <name>obstacle_1</name>
     </include>
 
     <include>
       <uri>model://obstacle_1</uri>
-      <pose>-2.0 -2.0 3.0 0.0 0 0</pose>
+      <pose>-2.0 -2.0 2. 0.0 0 0</pose>
       <name>obstacle_2</name>
     </include>
 
     <include>
       <uri>model://obstacle_1</uri>
-      <pose>2.0 -2.0 3.0 0.0 0 0</pose>
+      <pose>2.0 -2.0 2. 0.0 0 0</pose>
       <name>obstacle_3</name>
     </include>
 
     <include>
       <uri>model://obstacle_1</uri>
-      <pose>-2.0 2.0 3.0 0.0 0 0</pose>
+      <pose>-2.0 2.0 2. 0.0 0 0</pose>
       <name>obstacle_4</name>
     </include>
 

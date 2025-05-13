@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="obstacle_1">
+    <static>false</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+              <radius>0.6</radius>
+              <length>7.0</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+              <radius>0.6</radius>
+              <length>7.0</length>
+          </cylinder>
+        </geometry>        
+      </visual>
+    </link>
+  </model>
+</sdf>

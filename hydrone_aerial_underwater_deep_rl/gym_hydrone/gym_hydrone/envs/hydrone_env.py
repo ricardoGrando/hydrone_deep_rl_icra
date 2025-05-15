@@ -183,8 +183,8 @@ class hydroneEnv(gym.Env):
                 # print(f'{time_info}: Collision!!')
                 done = True
 
-        if (self.position.z < -0.9 or self.position.z > 5.0):
-            done = True
+            if (self.position.z < -0.9 or self.position.z > 5.0):
+                done = True
 
         if current_distance < self.goalbox_distance:
             if not done:

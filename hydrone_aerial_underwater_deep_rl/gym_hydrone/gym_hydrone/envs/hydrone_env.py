@@ -21,7 +21,7 @@ class hydroneEnv(gym.Env):
                  action_size=5, min_range=0.5, max_range=10, min_ang_vel=-0.25, max_ang_vel=0.25, min_linear_vel=-0.25,
                  max_linear_vel=0.25, min_altitude_vel=-0.25, max_altitude_vel=0.25, goalbox_distance=0.85, collision_distance=0.65, reward_goal=200.,
 
-                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, persistent=False, model_path='/home/adminutec/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'):
+                 reward_collision=-20, angle_out=250, goal_list=None, test_real=False, agent_number=0, persistent=False, xy_mode=False, model_path='/home/adminutec/hydrone_ws/src/hydrone_deep_rl_icra/hydrone_aerial_underwater_deep_rl/models/goal_box/model0.sdf'):
 
         self.goal_x = 0
         self.goal_y = 0
@@ -34,6 +34,7 @@ class hydroneEnv(gym.Env):
         self.env_stage = env_stage
         self.test_real = test_real
         self.agent_number = agent_number
+        self.xy_mode = xy_mode
 
         self.pub_cmd_vel = rospy.Publisher('/hydrone_aerial_underwater'+str(self.agent_number)+'/cmd_vel', Twist, queue_size=1)
         self.sub_odom = rospy.Subscriber('/hydrone_aerial_underwater'+str(self.agent_number)+'/odometry_sensor1/odometry', Odometry, self.getOdometry)
@@ -51,7 +52,10 @@ class hydroneEnv(gym.Env):
 
         if not goal_list:
             # if self.env_stage == 1 or self.env_stage == 2:
-            goal_list = np.asarray([np.random.uniform((-3.5, -3.5, -0.9), (3.5, 3.5, 3.5)) for _ in range(1)])
+            if self.xy_mode: 
+                goal_list = np.asarray([np.random.uniform((-3.5, -3.5, 3.0), (3.5, 3.5, 3.0)) for _ in range(1)])
+            else:
+                goal_list = np.asarray([np.random.uniform((-3.5, -3.5, -0.9), (3.5, 3.5, 3.5)) for _ in range(1)])
             # else:
             #     goal_list = np.array([np.random.uniform((0, 0), (3, -3)) for _ in range(1)])
         else:
@@ -110,18 +114,30 @@ class hydroneEnv(gym.Env):
         return [seed]
 
     def get_action_space_values(self):
-        low = np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel])
-        high = np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel])
+        if self.xy_mode:
+            low = np.array([self.min_linear_vel, self.min_ang_vel])
+            high = np.array([self.max_linear_vel, self.max_ang_vel])
+        else:
+            low = np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel])
+            high = np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel])
+
         shape_value = low.shape[0]
         return low, high, shape_value
 
     def get_observation_space_values(self):
-        low = np.append(np.full(self.lidar_samples, self.min_range), np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel, 0, -math.pi, -math.pi], dtype=np.float32))
-        high = np.append(np.full(self.lidar_samples, self.max_range), np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel, np.inf, math.pi, math.pi], dtype=np.float32))
+        if self.xy_mode:
+            low = np.append(np.full(self.lidar_samples, self.min_range), np.array([self.min_linear_vel, self.min_ang_vel, 0, -math.pi, -math.pi], dtype=np.float32))
+            high = np.append(np.full(self.lidar_samples, self.max_range), np.array([self.max_linear_vel, self.max_ang_vel, np.inf, math.pi, math.pi], dtype=np.float32))
+        else:
+            low = np.append(np.full(self.lidar_samples, self.min_range), np.array([self.min_linear_vel, self.min_altitude_vel, self.min_ang_vel, 0, -math.pi, -math.pi], dtype=np.float32))
+            high = np.append(np.full(self.lidar_samples, self.max_range), np.array([self.max_linear_vel, self.max_altitude_vel, self.max_ang_vel, np.inf, math.pi, math.pi], dtype=np.float32))
         return low, high
 
     def _getGoalDistace(self):
-        goal_distance = math.sqrt((self.goal_x - self.position.x)**2 + (self.goal_y - self.position.y)**2 + (self.goal_z - self.position.z)**2)
+        if self.xy_mode:
+            goal_distance = math.sqrt((self.goal_x - self.position.x)**2 + (self.goal_y - self.position.y)**2)
+        else:
+            goal_distance = math.sqrt((self.goal_x - self.position.x)**2 + (self.goal_y - self.position.y)**2 + (self.goal_z - self.position.z)**2)
         return goal_distance
 
     def getOdometry(self, odom):
@@ -184,7 +200,11 @@ class hydroneEnv(gym.Env):
                 done = True
 
             if (self.position.z < -0.9 or self.position.z > 5.0):
-                done = True
+                rospy.wait_for_service('/gazebo/reset_world')
+                try:
+                    self.reset_proxy()
+                except rospy.ServiceException:
+                    print("gazebo/reset_simulation service call failed")
 
         if current_distance < self.goalbox_distance:
             if not done:
@@ -202,7 +222,12 @@ class hydroneEnv(gym.Env):
             done = True
 
         if (self.position.z < -0.9 or self.position.z > 4.0):
-            done = True
+        #     done = True
+            rospy.wait_for_service('/gazebo/reset_world')
+            try:
+                self.reset_proxy()
+            except rospy.ServiceException:
+                print("gazebo/reset_simulation service call failed")
 
         if distance < self.goalbox_distance:
             if not done:
@@ -251,12 +276,19 @@ class hydroneEnv(gym.Env):
 
     def step(self, action):
         self.set_linear_vel(np.clip(action[0], self.min_linear_vel, self.max_linear_vel))
-        self.set_altitude_vel(np.clip(action[1], self.min_altitude_vel, self.max_altitude_vel))
-        self.set_ang_vel(np.clip(action[2], self.min_ang_vel, self.max_ang_vel))
+        if self.xy_mode:
+            self.set_altitude_vel(np.clip(action[1], self.min_altitude_vel, self.max_altitude_vel))        
+            self.set_ang_vel(np.clip(action[1], self.min_ang_vel, self.max_ang_vel))
+        else:
+            self.set_altitude_vel(np.clip(action[1], self.min_altitude_vel, self.max_altitude_vel))        
+            self.set_ang_vel(np.clip(action[2], self.min_ang_vel, self.max_ang_vel))
 
         vel_cmd = Twist()
         vel_cmd.linear.x = self.linear_vel
-        vel_cmd.linear.z = self.altitude_vel
+        if self.xy_mode:
+            vel_cmd.linear.z = 0.0
+        else:
+            vel_cmd.linear.z = self.altitude_vel
         vel_cmd.angular.z = self.ang_vel
 
         if self.persistent:
@@ -317,12 +349,12 @@ class hydroneEnv(gym.Env):
             else:
                 self.respawn_goal.setGoalList(np.array(goal))
 
-            if not persistent:
-                rospy.wait_for_service('/gazebo/reset_world')
-                try:
-                    self.reset_proxy()
-                except rospy.ServiceException:
-                    print("gazebo/reset_simulation service call failed")
+            # if not persistent:
+            #     rospy.wait_for_service('/gazebo/reset_world')
+            #     try:
+            #         self.reset_proxy()
+            #     except rospy.ServiceException:
+            #         print("gazebo/reset_simulation service call failed")
 
             data = None
             while data is None:
